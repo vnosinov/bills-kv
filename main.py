@@ -17,15 +17,15 @@ def parse_xml(xml_file):
 
     contract_detail = doc.getElementsByTagName('ContractDetail')
     # billing_account = doc.getElementsByTagName('BillingAccount')
-
+    billing_account = doc.getElementsByTagName('BillingAccount')[1].firstChild.data
     for i, cont in enumerate(invoice_document):
+        pass
 
-        billing_account = doc.getElementsByTagName('BillingAccount')[0].firstChild.data
     #     contract_id = cont.getElementsByTagName('ContractID')[0].firstChild.data
     #     total_amount = cont.getElementsByTagName('TotalAmount')[0].firstChild.data
     #     data.append((contract_id, total_amount))
     #     # print(i+1, contract_id, total_amount)
-        print(billing_account)
+    print(billing_account)
 
 
     # for i, bill in enumerate(billing_account):
@@ -55,7 +55,6 @@ def parse_xml(xml_file):
     #     data.append((bill_data, account, sa, dmaoc, dc, deoc, drs, dtwt, dfcs, dtfp))
     #
     # return data
-
 
 
 if __name__ == "__main__":
