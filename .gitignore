@@ -133,3 +133,4 @@ dmypy.json
 
 # Resource
 XML/
+*.xls;xlsx;csv

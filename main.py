@@ -10,66 +10,47 @@ def get_files_xml(path_to_files):
     return os.listdir(path_to_files)
 
 
-def parse_xml(xml_file):
-    data = []
-    doc = minodom.parse(xml_file)
-    invoice_document = doc.getElementsByTagName('InvoiceDocument')
+def parse_xml(filename):
+    tree = ET.parse(filename)
+    root = tree.getroot()
+    data_dict = {}
 
-    contract_detail = doc.getElementsByTagName('ContractDetail')
-    # billing_account = doc.getElementsByTagName('BillingAccount')
-    billing_account = doc.getElementsByTagName('BillingAccount')[1].firstChild.data
-    for i, cont in enumerate(invoice_document):
-        pass
+    for member in root.iter('Invoice'):
+        for obj in member.findall('Customer'):
+            for obj1 in obj.findall('BillingAccount'):
+                billing_account = obj1.text
+                data_dict[billing_account] = []
 
-    #     contract_id = cont.getElementsByTagName('ContractID')[0].firstChild.data
-    #     total_amount = cont.getElementsByTagName('TotalAmount')[0].firstChild.data
-    #     data.append((contract_id, total_amount))
-    #     # print(i+1, contract_id, total_amount)
-    print(billing_account)
-
-
-    # for i, bill in enumerate(billing_account):
-    #
-    #
-    #     # contract_id = cont.getElementsByTagName('ContractID')[0].firstChild.data
-    #     # total_amount = cont.getElementsByTagName('TotalAmount')[0].firstChild.data
-    #     # print(i+1, contract_id, total_amount)
+        for contract_detail in member.findall('Contract/ContractDetail'):
+            contract_id = contract_detail.find('ContractID')
+            for total_amount in contract_detail.findall('SubInvoiceAmount/AmountDetail/TotalAmount'):
+                pair_data = (billing_account, contract_id.text, float(total_amount.text))
+                data_dict[billing_account].append(pair_data)
+    return data_dict
 
 
+def stat_data(data_dict):
+    my_list = []
+    for key in data_dict.keys():
+        if key not in ['5210888', '5209074']:
+            for i in data_dict[key]:
+                bill_acc, cont_id, total_am = i
 
-    # print(contract_detail)
-    # account = doc.getElementsByTagName('Account_No')[0].firstChild.data
-    # bill_data = doc.getElementsByTagName('BillDate')[0].firstChild.data
-    # lst = doc.getElementsByTagName("Device")
-    #
-    # for device in lst:
-    #     sa = device.getElementsByTagName('ServiceAgreement')[0].firstChild.data
-    #     dmaoc = device.getElementsByTagName('DeviceMonthlyAndOtherCharges')[0].firstChild.data
-    #     dc = device.getElementsByTagName('DeviceCalls')[0].firstChild.data
-    #     deoc = device.getElementsByTagName('DeviceOtherCharges')[0].firstChild.data
-    #     drs = device.getElementsByTagName('DeviceRoamingServices')[0].firstChild.data
-    #     dtwt = device.getElementsByTagName('DeviceTotalWithTaxes')[0].firstChild.data
-    #     dfcs = device.getElementsByTagName('DeviceFixedCallsSummary')[0].firstChild.data
-    #     dtfp = device.getElementsByTagName('DeviceTotalForPeriod')[0].firstChild.data
-    #
-    #     data.append((bill_data, account, sa, dmaoc, dc, deoc, drs, dtwt, dfcs, dtfp))
-    #
-    # return data
+                my_list.append([bill_acc, cont_id, str(total_am).replace('.', ',')])
+
+    df = pd.DataFrame(my_list, columns=['bill', 'number', 'amount'])
+    writer = pd.ExcelWriter('output.xlsx')
+
+    df.to_excel(writer)  # save the excel
+    writer.save()
+    print('DataFrame is written successfully to Excel File.')
 
 
 if __name__ == "__main__":
     PATH_TO_FILE = os.path.join(os.getcwd(), 'XML\\')
-
     list_of_files = get_files_xml(PATH_TO_FILE)
-    full_path = PATH_TO_FILE + list_of_files[1]
-    print(full_path)
-    parse_xml(full_path)
-    # print(list_of_files)
+    full_path = PATH_TO_FILE + list_of_files[0]
+    xml_dict = parse_xml(full_path)
 
-#     for file in list_of_files:
-#
-#
-#
-#         # df = (get_dataframe(parse_xml(full_path)))
-        # dfs.append(df)
-#         # multiple_df(dfs, 'Kievstar', 'output.xlsx', 1)
+    stat_data(xml_dict)
+
